@@ -119,5 +119,30 @@ AWS_REGION=your-region
 AWS_BUCKET_NAME=your-bucket-name
 ```
 
+## structure of the project image 
+
+```plaintext
+s3_web_store_nextjs
+├── .gitignore
+├── LICENSE
+├── README.md
+├── package.json
+├── public
+│   └── favicon.ico
+├── src
+│   ├── components
+│   │   ├── FileUpload.js
+│   │   └── Layout.js
+│   ├── pages
+│   │   ├── _app.js
+│   │   ├── _document.js
+│   │   ├── index.js
+│   │   └── upload.js
+│   └── styles
+│       └── Home.module.css
+├── tsconfig.json
+└── yarn.lock
+```
+
 
 
