@@ -1,10 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import styles from "./page.module.css";
 
 export default function FileUpload() {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState("");
   const [fileName, setFileName] = useState("");
+  const [theme, setTheme] = useState("theme-light");
+
+  useEffect(() => {
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    setTheme(prefersDark ? "theme-dark" : "theme-light");
+  }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -40,18 +49,21 @@ export default function FileUpload() {
   };
 
   return (
-    <div>
-      <h2>Upload an Image to S3</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="file" onChange={handleFileChange} accept="image/*" />
-        <button type="submit">Upload</button>
-      </form>
-      {status && <p>{status}</p>}
-      {fileName && (
-        <div>
-          <p>Uploaded File: {fileName}</p>
-        </div>
-      )}
+    <div className={styles[theme]}>
+      <div className={styles.container}>
+        <h2>Upload an Image to S3</h2>
+
+        <form onSubmit={handleSubmit}>
+          <input type="file" onChange={handleFileChange} accept="image/*" />
+          <button type="submit">Upload</button>
+        </form>
+        {status && <p>{status}</p>}
+        {fileName && (
+          <div>
+            <p>Uploaded File: {fileName}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
