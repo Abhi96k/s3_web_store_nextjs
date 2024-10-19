@@ -1,51 +1,56 @@
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import * as formidable from "formidable";
-import fs from "fs";
 
 const s3Client = new S3Client({
-  region: process.env.NEXT_PUBLIC_AWS_REGION,
+  region: process.env.AWS_S3_REGION,
   credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
   },
 });
 
-export async function POST(req) {
+async function uploadFileToS3(file, fileName) {
+  const fileBuffer = file;
+  console.log(fileName);
+
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: `${fileName}`,
+    Body: fileBuffer,
+    ContentType: "image/jpg",
+  };
+
+  const command = new PutObjectCommand(params);
+  await s3Client.send(command);
+  return fileName;
+}
+
+export async function POST(request) {
   try {
-    const form = new formidable.IncomingForm();
+    const formData = await request.formData();
+    const file = formData.get("file");
 
-    const data = await new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) {
-          reject(err);
-          return;
+    if (!file) {
+      return NextResponse.json(
+        {
+          error: "File is required.",
+        },
+        {
+          status: 400,
         }
-        resolve({ fields, files });
-      });
-    });
+      );
+    }
 
-    // Get the uploaded file
-    const file = data.files.file;
-    const fileStream = fs.createReadStream(file.filepath);
-
-    // Upload the file to S3
-    const uploadParams = {
-      Bucket: process.env.NEXT_PUBLIC_AWS_BUCKET_NAME,
-      Key: file.originalFilename,
-      Body: fileStream,
-    };
-
-    await s3Client.send(new PutObjectCommand(uploadParams));
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const fileName = await uploadFileToS3(buffer, file.name);
 
     return NextResponse.json({
       success: true,
-      message: `File uploaded successfully to S3: ${file.originalFilename}`,
+      fileName,
     });
   } catch (error) {
     return NextResponse.json({
-      success: false,
-      error: error.message,
+      error,
     });
   }
 }
